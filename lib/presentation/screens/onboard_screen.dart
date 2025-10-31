@@ -12,7 +12,7 @@ class OnboardScreen extends StatelessWidget {
       body: Stack(
         children: [
           Positioned.fill(
-            child: Image.asset('assets/background.jpeg', fit: BoxFit.cover),
+            child: Image.asset('assets/background.jpg', fit: BoxFit.cover),
           ),
 
           Positioned.fill(
@@ -113,6 +113,8 @@ class OnboardScreen extends StatelessWidget {
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                               decoration: TextDecoration.underline,
+                              decorationThickness: 1,
+                              decorationColor: Color.fromARGB(151, 11, 7, 255),
                             ),
                           ),
                         ),
