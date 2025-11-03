@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:todo_app/presentation/screens/home_screen.dart';
+import 'package:todo_app/presentation/screens/signup_screen.dart';
 
 class OnboardScreen extends StatelessWidget {
   const OnboardScreen({super.key});
@@ -65,7 +66,7 @@ class OnboardScreen extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const HomeScreen(),
+                              builder: (context) => const SignupScreen(),
                             ),
                           );
                         },
