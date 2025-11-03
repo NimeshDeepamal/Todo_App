@@ -58,13 +58,12 @@ class TaskListNotifier extends AsyncNotifier<TaskListState> {
     ref.invalidateSelf();
   }
 
-  /// ✅ FIXED: Allow editing any task (complete or incomplete) without breaking filters
   Future<void> updateTask(Task t) async {
     final currentFilter = state.value?.filter;
     print('Updating task ${t.id} (keep filter: $currentFilter)');
     await ref.read(_repoProvider).updateTask(t);
-    await loadTasks(); // reload latest list
-    _applyFilter(currentFilter); // keep the same filter
+    await loadTasks(); 
+    _applyFilter(currentFilter);
     print('Task ${t.id} updated successfully with preserved filter.');
   }
 
