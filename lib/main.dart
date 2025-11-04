@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:todo_app/presentation/screens/home_screen.dart';
 import 'package:todo_app/presentation/screens/onboard_screen.dart';
 
 void main() {
