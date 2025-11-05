@@ -1,7 +1,6 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:todo_app/presentation/screens/home_screen.dart';
+import 'package:todo_app/presentation/screens/login_screen.dart';
 import 'package:todo_app/presentation/screens/signup_screen.dart';
 
 class OnboardScreen extends StatelessWidget {
@@ -10,118 +9,114 @@ class OnboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 213, 241, 248),
       body: Stack(
         children: [
-          Positioned.fill(
-            child: Image.asset('assets/background.jpg', fit: BoxFit.cover),
-          ),
-
-          Positioned.fill(
-            child: Container(color: Colors.black.withOpacity(0.3)),
+          Positioned(
+            top: 70,
+            right: 24,
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                );
+              },
+              child: const Text(
+                "Skip",
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
           ),
 
           Positioned.fill(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 50),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.end,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 40, bottom: 20),
+                    child: Image.asset(
+                      'assets/checklist.png',
+                      width: 200,
+                      height: 200,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                  const SizedBox(height: 50),
                   Text(
                     "ToDoo",
                     textAlign: TextAlign.center,
                     style: GoogleFonts.lobster(
-                      color: Colors.white,
+                      color: const Color.fromARGB(255, 7, 106, 255),
                       fontSize: 62,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 22),
                   const Text(
                     "Organize your tasks and boost productivity",
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white70, fontSize: 28),
+                    style: TextStyle(
+                      color: Color.fromARGB(255, 12, 12, 12),
+                      fontSize: 28,
+                    ),
                   ),
-                  const SizedBox(height: 44),
-
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white.withOpacity(0.2),
-                          shadowColor: Colors.transparent,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 16,
-                            horizontal: 24,
-                          ),
-                          minimumSize: const Size.fromHeight(50),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
+                  const SizedBox(height: 55),
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [
+                          Color.fromARGB(255, 7, 106, 255),
+                          Color.fromARGB(255, 3, 60, 190),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(30),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.blue.withOpacity(0.4),
+                          offset: const Offset(0, 6),
+                          blurRadius: 10,
                         ),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const SignupScreen(),
-                            ),
-                          );
-                        },
-                        child: const Text(
-                          "Get Start",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                      ],
+                    ),
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SignupScreen(),
                           ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        minimumSize: const Size.fromHeight(55),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                      child: const Text(
+                        "Get Start",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
 
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Flexible(
-                          child: Text(
-                            "Already have an account? ",
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 18,
-                            ),
-                            overflow: TextOverflow.visible,
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const HomeScreen(),
-                              ),
-                            );
-                          },
-                          child: const Text(
-                            "Login",
-                            style: TextStyle(
-                              color: Colors.blue,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              decoration: TextDecoration.underline,
-                              decorationThickness: 1,
-                              decorationColor: Color.fromARGB(151, 11, 7, 255),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
