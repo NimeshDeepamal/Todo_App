@@ -83,7 +83,6 @@ class _AddEditTaskScreenState extends ConsumerState<AddEditTaskScreen> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // Prevent double clicks
     if (_isSaving) return;
     setState(() => _isSaving = true);
 
@@ -94,53 +93,24 @@ class _AddEditTaskScreenState extends ConsumerState<AddEditTaskScreen> {
 
     try {
       if (widget.task == null) {
-        // Add — provider will update UI immediately (local-first)
-        await notifier.addTask(title: title, description: desc, dueDate: due);
-        if (!mounted) return;
-
-        // show success quickly then pop
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('✅ Task added successfully!'),
-            backgroundColor: Colors.green.shade600,
-            duration: const Duration(milliseconds: 700),
-          ),
+        final task = await notifier.addTask(
+          title: title,
+          description: desc,
+          dueDate: due,
         );
       } else {
-        // Update — provider updates UI immediately
         final updated = widget.task!.copyWith(
           title: title,
           description: desc,
           dueDate: due,
         );
         await notifier.updateTask(updated);
-        if (!mounted) return;
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('✅ Task updated successfully!'),
-            backgroundColor: Colors.green.shade600,
-            duration: const Duration(milliseconds: 700),
-          ),
-        );
       }
     } catch (e) {
-      debugPrint("❌ Error saving task: $e");
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to save task: $e'),
-            backgroundColor: Colors.red.shade600,
-          ),
-        );
-      }
+      debugPrint("Save error: $e");
     } finally {
-      // Always stop spinner while widget still mounted
       if (mounted) setState(() => _isSaving = false);
-
-      // short delay so user sees snack, then pop returning "true" to signal success
-      await Future.delayed(const Duration(milliseconds: 500));
-      if (mounted) Navigator.of(context).pop(true);
+      Navigator.of(context).pop(true);
     }
   }
 
