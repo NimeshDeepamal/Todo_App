@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:todo_app/presentation/providers/task_provider.dart';
 import 'package:todo_app/presentation/screens/home_screen.dart';
 import 'package:todo_app/presentation/screens/signup_screen.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -28,6 +30,9 @@ class _LoginScreenState extends State<LoginScreen> {
         password: _passwordController.text.trim(),
       );
 
+      final taskListNotifier = ref.read(taskListProvider.notifier);
+      await taskListNotifier.loadTasks();
+
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -41,9 +46,9 @@ class _LoginScreenState extends State<LoginScreen> {
       } else if (e.code == 'wrong-password') {
         message = 'Incorrect password.';
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -89,7 +94,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
-
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
@@ -102,16 +106,22 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color.fromARGB(255, 6, 140, 167)
-                        .withOpacity(0.25),
+                    color: const Color.fromARGB(
+                      255,
+                      6,
+                      140,
+                      167,
+                    ).withOpacity(0.25),
                     offset: const Offset(0, -8),
                     blurRadius: 12,
                   ),
                 ],
               ),
               child: SingleChildScrollView(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 30, vertical: 25),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 30,
+                  vertical: 25,
+                ),
                 child: Form(
                   key: _formKey,
                   child: Column(
@@ -125,7 +135,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       const SizedBox(height: 30),
-
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
@@ -144,7 +153,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         },
                       ),
                       const SizedBox(height: 20),
-
                       TextFormField(
                         controller: _passwordController,
                         obscureText: true,
@@ -162,9 +170,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           return null;
                         },
                       ),
-
                       const SizedBox(height: 10),
-
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
@@ -178,9 +184,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 20),
-
                       Container(
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
@@ -224,9 +228,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                         ),
                       ),
-
                       const SizedBox(height: 25),
-
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -277,8 +279,7 @@ class _LoginScreenState extends State<LoginScreen> {
         borderSide: BorderSide(color: Colors.blue.shade400, width: 2),
         borderRadius: BorderRadius.circular(30),
       ),
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
     );
   }
 }
