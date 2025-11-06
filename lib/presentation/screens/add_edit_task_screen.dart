@@ -16,6 +16,7 @@ class _AddEditTaskScreenState extends ConsumerState<AddEditTaskScreen> {
   late TextEditingController _titleC;
   late TextEditingController _descC;
   DateTime? _dueDate;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -82,23 +83,65 @@ class _AddEditTaskScreenState extends ConsumerState<AddEditTaskScreen> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
+    // Prevent double clicks
+    if (_isSaving) return;
+    setState(() => _isSaving = true);
+
     final title = _titleC.text.trim();
     final desc = _descC.text.trim();
     final due = _dueDate!;
     final notifier = ref.read(taskListProvider.notifier);
 
-    if (widget.task == null) {
-      await notifier.addTask(title: title, description: desc, dueDate: due);
-    } else {
-      final updated = widget.task!.copyWith(
-        title: title,
-        description: desc,
-        dueDate: due,
-      );
-      await notifier.updateTask(updated);
-    }
+    try {
+      if (widget.task == null) {
+        // Add — provider will update UI immediately (local-first)
+        await notifier.addTask(title: title, description: desc, dueDate: due);
+        if (!mounted) return;
 
-    if (mounted) Navigator.of(context).pop();
+        // show success quickly then pop
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('✅ Task added successfully!'),
+            backgroundColor: Colors.green.shade600,
+            duration: const Duration(milliseconds: 700),
+          ),
+        );
+      } else {
+        // Update — provider updates UI immediately
+        final updated = widget.task!.copyWith(
+          title: title,
+          description: desc,
+          dueDate: due,
+        );
+        await notifier.updateTask(updated);
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('✅ Task updated successfully!'),
+            backgroundColor: Colors.green.shade600,
+            duration: const Duration(milliseconds: 700),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint("❌ Error saving task: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to save task: $e'),
+            backgroundColor: Colors.red.shade600,
+          ),
+        );
+      }
+    } finally {
+      // Always stop spinner while widget still mounted
+      if (mounted) setState(() => _isSaving = false);
+
+      // short delay so user sees snack, then pop returning "true" to signal success
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (mounted) Navigator.of(context).pop(true);
+    }
   }
 
   @override
@@ -106,9 +149,9 @@ class _AddEditTaskScreenState extends ConsumerState<AddEditTaskScreen> {
     final isEdit = widget.task != null;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6FA),
+      backgroundColor: const Color.fromARGB(255, 213, 241, 248),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: const Color.fromARGB(0, 10, 57, 175),
         elevation: 0,
         title: Text(
           isEdit ? "Edit Task" : "Add New Task",
@@ -257,7 +300,7 @@ class _AddEditTaskScreenState extends ConsumerState<AddEditTaskScreen> {
                         ],
                       ),
                       child: ElevatedButton(
-                        onPressed: _save,
+                        onPressed: _isSaving ? null : _save,
                         style: ElevatedButton.styleFrom(
                           elevation: 0,
                           backgroundColor: Colors.transparent,
@@ -267,15 +310,24 @@ class _AddEditTaskScreenState extends ConsumerState<AddEditTaskScreen> {
                           ),
                           padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
-                        child: Text(
-                          isEdit ? "Save Changes" : "Add Task",
-                          style: const TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
+                        child: _isSaving
+                            ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : Text(
+                                isEdit ? "Save Changes" : "Add Task",
+                                style: const TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
                       ),
                     ),
                   ),

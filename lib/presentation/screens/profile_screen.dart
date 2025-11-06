@@ -28,7 +28,6 @@ class ProfileScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Profile Avatar
               Center(
                 child: CircleAvatar(
                   radius: 60,
@@ -38,7 +37,6 @@ class ProfileScreen extends StatelessWidget {
               ),
               const SizedBox(height: 20),
 
-              // User Name
               Text(
                 user?.displayName ?? "User",
                 style: GoogleFonts.poppins(
@@ -50,7 +48,6 @@ class ProfileScreen extends StatelessWidget {
 
               const SizedBox(height: 6),
 
-              // User Email
               Text(
                 user?.email ?? "No email found",
                 style: GoogleFonts.poppins(
@@ -72,7 +69,6 @@ class ProfileScreen extends StatelessWidget {
               ElevatedButton(
                 onPressed: () async {
                   await FirebaseAuth.instance.signOut();
-                  // Navigate to Login Screen after logout
                   Navigator.pushAndRemoveUntil(
                     context,
                     MaterialPageRoute(

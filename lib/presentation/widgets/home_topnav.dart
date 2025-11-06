@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:todo_app/presentation/screens/profile_screen.dart';
 
 class TopNavbar extends StatefulWidget {
   const TopNavbar({super.key});
@@ -31,9 +32,19 @@ class _TopNavbarState extends State<TopNavbar> {
 
         child: Row(
           children: [
-            CircleAvatar(
-              radius: 20,
-              backgroundImage: AssetImage("assets/profile.jpg"),
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProfileScreen(),
+                  ),
+                );
+              },
+              child: CircleAvatar(
+                radius: 20,
+                backgroundImage: AssetImage("assets/profile.jpg"),
+              ),
             ),
             SizedBox(width: 15),
             Column(

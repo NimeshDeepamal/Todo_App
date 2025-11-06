@@ -28,7 +28,6 @@ class _LoginScreenState extends State<LoginScreen> {
         password: _passwordController.text.trim(),
       );
 
-      // Navigate to HomeScreen on successful login
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -127,7 +126,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 30),
 
-                      // Email field
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
@@ -147,7 +145,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 20),
 
-                      // Password field
                       TextFormField(
                         controller: _passwordController,
                         obscureText: true,
