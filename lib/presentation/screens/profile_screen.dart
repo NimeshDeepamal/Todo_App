@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:todo_app/presentation/screens/login_screen.dart';
+import '../providers/task_provider.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
@@ -36,7 +38,6 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-
               Text(
                 user?.displayName ?? "User",
                 style: GoogleFonts.poppins(
@@ -45,9 +46,7 @@ class ProfileScreen extends StatelessWidget {
                   color: const Color.fromARGB(255, 7, 106, 255),
                 ),
               ),
-
               const SizedBox(height: 6),
-
               Text(
                 user?.email ?? "No email found",
                 style: GoogleFonts.poppins(
@@ -55,19 +54,17 @@ class ProfileScreen extends StatelessWidget {
                   color: Colors.grey[700],
                 ),
               ),
-
               const SizedBox(height: 30),
-
               _buildInfoTile(Icons.settings, "Settings"),
               const SizedBox(height: 10),
               _buildInfoTile(Icons.rate_review, "Rate Us"),
               const SizedBox(height: 10),
               _buildInfoTile(Icons.help, "Help"),
-
               const SizedBox(height: 30),
-
               ElevatedButton(
                 onPressed: () async {
+                  final notifier = ref.read(taskListProvider.notifier);
+                  await notifier.clearAllTasks();
                   await FirebaseAuth.instance.signOut();
                   Navigator.pushAndRemoveUntil(
                     context,
