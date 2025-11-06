@@ -1,7 +1,10 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../domain/entities/task.dart';
 import '../../data/repositories/task_repository_impl.dart';
+import '../../data/datasources/local_db.dart';
 
 final _repoProvider = Provider((ref) => TaskRepositoryImpl());
 
@@ -22,115 +25,112 @@ class TaskListState {
 class TaskListNotifier extends AsyncNotifier<TaskListState> {
   List<Task> _allTasks = [];
 
+  String get _userId {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) throw Exception("User not logged in");
+    return user.uid;
+  }
+
   @override
   Future<TaskListState> build() async {
     await loadTasks();
     return TaskListState(tasks: _allTasks, filter: null);
   }
 
-  bool? get currentFilter => state.value?.filter;
-
   Future<void> loadTasks() async {
-    final currentFilter = state.value?.filter;
     state = const AsyncLoading();
-    final tasks = await ref.read(_repoProvider).getAllTasks();
-    _allTasks = List.from(tasks);
-    print(
-      'Loaded tasks: ${_allTasks.map((t) => 'Task(id: ${t.id}, title: ${t.title}, completed: ${t.completed})').toList()}',
-    );
-    _applyFilter(currentFilter);
+    final userId = _userId;
+
+    try {
+      final tasks = await ref.read(_repoProvider).getAllTasks();
+      _allTasks = tasks.where((t) => t.userId == userId).toList();
+      _applyFilter(state.value?.filter);
+    } catch (e) {
+      debugPrint("Load tasks failed: $e");
+    }
   }
 
-  Future<void> addTask({
+  Future<Task> addTask({
     required String title,
     required String description,
     required DateTime dueDate,
   }) async {
+    final userId = _userId;
     final newTask = Task(
       id: const Uuid().v4(),
       title: title,
       description: description,
       dueDate: dueDate,
       completed: false,
+      userId: userId,
     );
-    await ref.read(_repoProvider).addTask(newTask);
-    await loadTasks();
-    ref.invalidateSelf();
+
+    _allTasks.add(newTask);
+    _applyFilter(state.value?.filter);
+
+    await LocalDb.insertTask(newTask.toDto());
+
+    ref.read(_repoProvider).addTask(newTask).catchError((error) {
+      debugPrint("Failed to sync task to Firebase: $error");
+    });
+
+    return newTask;
   }
 
-  Future<void> updateTask(Task t) async {
-    final currentFilter = state.value?.filter;
-    print('Updating task ${t.id} (keep filter: $currentFilter)');
-    await ref.read(_repoProvider).updateTask(t);
-    await loadTasks(); 
-    _applyFilter(currentFilter);
-    print('Task ${t.id} updated successfully with preserved filter.');
+  Future<void> updateTask(Task task) async {
+    final index = _allTasks.indexWhere((t) => t.id == task.id);
+    if (index != -1) _allTasks[index] = task;
+
+    _applyFilter(state.value?.filter);
+
+    await ref.read(_repoProvider).updateTask(task);
+    await LocalDb.updateTask(task.toDto());
   }
 
   Future<void> deleteTask(String id) async {
+    _allTasks.removeWhere((t) => t.id == id);
+    _applyFilter(state.value?.filter);
+
     await ref.read(_repoProvider).deleteTask(id);
-    await loadTasks();
-    ref.invalidateSelf();
+    await LocalDb.deleteTask(id, _userId);
   }
 
-  Future<void> toggleComplete(Task t) async {
-    final currentFilter = state.value?.filter;
-    print('Toggling task ${t.id}, preserving filter: $currentFilter');
-    final updated = t.copyWith(completed: !t.completed);
-    await ref.read(_repoProvider).updateTask(updated);
-    await loadTasks();
-    _applyFilter(currentFilter);
-    print('Toggle complete finished, filter: $currentFilter');
+  Future<void> toggleComplete(Task task) async {
+    final updated = task.copyWith(completed: !task.completed);
+    await updateTask(updated);
   }
 
-  void setFilter(bool? filter) {
-    print('Setting filter to: $filter');
-    if (filter == null) {
-      print('All filter triggered in setFilter');
-    }
-    final currentState =
-        state.value ?? TaskListState(tasks: _allTasks, filter: null);
-    state = AsyncData(currentState.copyWith(filter: filter, tasks: []));
-    if (filter == null) {
-      print('All filter applied, forcing state refresh');
-      ref.invalidateSelf();
-    }
-    _applyFilter(filter);
-    print('setFilter completed for filter: $filter');
-  }
+  void setFilter(bool? filter) => _applyFilter(filter);
 
   void _applyFilter(bool? filter) {
-    final currentState =
-        state.value ?? TaskListState(tasks: _allTasks, filter: filter);
-    print('Applying filter: $filter');
-    print(
-      'All tasks before filter: ${_allTasks.map((t) => 'Task(id: ${t.id}, title: ${t.title}, completed: ${t.completed})').toList()}',
-    );
-    if (filter == null) {
-      state = AsyncData(
-        currentState.copyWith(
-          tasks: List.unmodifiable(_allTasks),
-          filter: filter,
-        ),
-      );
-    } else {
-      state = AsyncData(
-        currentState.copyWith(
-          tasks: List.unmodifiable(
-            _allTasks.where((t) => t.completed == filter).toList(),
-          ),
-          filter: filter,
-        ),
-      );
+    final filteredTasks = filter == null
+        ? _allTasks
+        : _allTasks.where((t) => t.completed == filter).toList();
+
+    state = AsyncData(TaskListState(tasks: filteredTasks, filter: filter));
+  }
+
+  Future<void> clearAllTasks() async {
+    _allTasks = [];
+    state = AsyncData(TaskListState(tasks: [], filter: null));
+    try {
+      await LocalDb.clearTasks(_userId);
+    } catch (e) {
+      debugPrint("Failed to clear local tasks: $e");
     }
-    print(
-      'Filtered tasks: ${state.value?.tasks.map((t) => 'Task(id: ${t.id}, title: ${t.title}, completed: ${t.completed})').toList()}',
-    );
+  }
+
+  Future<void> logoutAndClearTasks() async {
+    final userId = _userId;
+    if (userId != null) {
+      await LocalDb.clearTasks(userId);
+    }
+
+    _allTasks = [];
+    state = AsyncData(TaskListState(tasks: [], filter: null));
   }
 }
 
 final taskListProvider = AsyncNotifierProvider<TaskListNotifier, TaskListState>(
-  () {
-    return TaskListNotifier();
-  },
+  () => TaskListNotifier(),
 );
