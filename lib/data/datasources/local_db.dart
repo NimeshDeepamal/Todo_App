@@ -23,7 +23,8 @@ class LocalDb {
             title TEXT,
             description TEXT,
             dueDate INTEGER,
-            completed INTEGER
+            completed INTEGER,
+            userId TEXT
           )
         ''');
       },
@@ -31,25 +32,47 @@ class LocalDb {
     return _instance!;
   }
 
-  static Future<List<TaskDto>> getAllTasks() async {
+  static Future<List<TaskDto>> getAllTasks(String userId) async {
     final db = await database;
-    final maps = await db.query(_taskTable, orderBy: 'dueDate ASC');
+    final maps = await db.query(
+      _taskTable,
+      where: 'userId = ?',
+      whereArgs: [userId],
+      orderBy: 'dueDate ASC',
+    );
     return maps.map((m) => TaskDto.fromMap(m)).toList();
   }
 
   static Future<void> insertTask(TaskDto dto) async {
     final db = await database;
-    await db.insert(_taskTable, dto.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert(
+      _taskTable,
+      dto.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   static Future<void> updateTask(TaskDto dto) async {
     final db = await database;
-    await db.update(_taskTable, dto.toMap(), where: 'id = ?', whereArgs: [dto.id]);
+    await db.update(
+      _taskTable,
+      dto.toMap(),
+      where: 'id = ? AND userId = ?',
+      whereArgs: [dto.id, dto.userId],
+    );
   }
 
-  static Future<void> deleteTask(String id) async {
+  static Future<void> deleteTask(String id, String userId) async {
     final db = await database;
-    await db.delete(_taskTable, where: 'id = ?', whereArgs: [id]);
+    await db.delete(
+      _taskTable,
+      where: 'id = ? AND userId = ?',
+      whereArgs: [id, userId],
+    );
+  }
+
+  static Future<void> clearTasks(String userId) async {
+    final db = await database;
+    await db.delete(_taskTable, where: 'userId = ?', whereArgs: [userId]);
   }
 }
